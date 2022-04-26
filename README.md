@@ -7,12 +7,12 @@ In a segmented image, ExactEuclideanDistanceMap calculates the shortest distance
 
 **Segmented Pixels**
 <br>
-![Image of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/FloodFillLib/SegCells.png)
+![Image of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SegCells.png)
 <br>
 <br>
 **2D Euclidean Distance Map, each pixel value replaced by its distance to the nearest surface**
 <br>
-![Image EDM of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/FloodFillLib/SegCellsEDM.png)
+![Image EDM of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SegCellsEDM.png)
 <br>
 
 ## EuclideanSpheres</strong>, 3D only
@@ -26,7 +26,7 @@ In a segmented image, this GDT calculates the shortest distance between seed pix
 **GDT of the 2D image with a point seed at far right of colored region.<br>
 The points labeled -1 are not connected.**
 <br>
-![Image GDT of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/FloodFillLib/SegCellsGDT.png)
+![Image GDT of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SegCellsGDT.png)
 
 <h2><strong>Geodesic Path</strong>, 2D and 3D</h2>
 
@@ -35,7 +35,7 @@ This method finds the shortest distance between a selected point or points in a 
 **2D Shortest Path example.<br>
 Seed is BLUE Destination is GREEN**
 <br>
-![Image shortest path in GDT](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/FloodFillLib/ShortestPath.png)
+![Image shortest path in GDT](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/ShortestPath.png)
 
 ## HybridFloodFill, 3D only
 
@@ -51,6 +51,6 @@ Cutoff values &lt; 1 flood all connected resolved pores and unresolved pores up 
 The fluid is injected from the bottom.<br>
 The medium is rendered transparent to reveal the invading fluid.**
 <br>
-![Image Flooded Path At Breakthrough](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/FloodFillLib/SyntheticRockAtBreakthroughGray.png)
+![Image Flooded Path At Breakthrough](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SyntheticRockAtBreakthroughGray.png)
 
 * The hybrid floodfill code was originally written to test this hypothesis. Initial results were encouraging with behavior consistent within mineral types. Other uses have included the study of [mixed porosity carbonates](https://www.researchgate.net/publication/338394414_Nuclear_magnetic_resonance_and_x-ray_microtomography_pore-scale_analysis_of_oil_recovery_in_mixed-porosity_carbonates)
