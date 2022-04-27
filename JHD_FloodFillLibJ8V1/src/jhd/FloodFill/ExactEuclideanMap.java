@@ -1,4 +1,6 @@
 package jhd.FloodFill;
+//Copyright (c) John H Dunsmuir 2022
+//MIT-License
 
 import java.awt.Dimension;
 //import java.net.URL;
