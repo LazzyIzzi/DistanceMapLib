@@ -1,20 +1,20 @@
 # DistanceMapLib
-<p><strong>This project started life as C routines for characterizing random pore network geometry and measuring things like concentration as a function of distance. The port to java was pretty straightforward. An interesting add-on is an MICP simulator that works by first flood-filling a Euclidean distance map of resolved pores and then continues the flood by using voxel gray level as a proxy for porosity. This page gives a basic description of the methods in the DistanceMap library.&nbsp; All methods support asymmetric pixels/voxel sizes and physical dimensions.
-
-## ExactEuclideanDistanceMap</strong>, 2D and 3D
+<p><strong>This project started life as C routines for characterizing random pore network geometry and measuring things like concentration as a function of distance. The port to java was pretty straightforward. An interesting add-on is an MICP simulator that works by first flood-filling a Euclidean distance map of resolved pores and then continues the flood by using voxel gray level as a proxy for porosity. This page gives a basic description of the methods in the DistanceMap library.&nbsp; All methods support asymmetric pixels/voxel sizes and physical dimensions.</strong></p>
+<!--See the <a href="https://lazzyizzi.github.io/#DistanceMapLib" target="_blank">DistanceMapLib</a> Web Page for detailed information.-->
+  
+## ExactEuclideanDistanceMap, 2D and 3D
 
 In a segmented image, ExactEuclideanDistanceMap calculates the shortest distance between each pixel in component &quot;A&quot; to its nearest connected neighbor in component &quot;B&quot; using <a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.322.7605&rep=rep1&type=pdf" target="_blank">Danielsson's algorithm</a>. In this implementation the input image must have one component set to zero. The EDM is calculated in either the zero or non-zero component as selected by the user.&nbsp; To improve performance, I have done a few optimizations on Danielsson&rsquo;s original 2D algorithm and extended those to 3D.
 
 **Segmented Pixels**
 <br>
-![Image of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SegCells.png)
+![Image of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/DistanceMapImages/DistanceMapLib/SegCells.png)
 <br>
 <br>
 **2D Euclidean Distance Map, each pixel value replaced by its distance to the nearest surface**
 <br>
-![Image EDM of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SegCellsEDM.png)
+![Image EDM of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/DistanceMapImages/DistanceMapLib/SegCellsEDM.png)
 <br>
-
 ## EuclideanSpheres</strong>, 3D only
 
 Voxels within a Euclidean sphere of radius R are defined on a Cartesian grid as &radic;(x<sup>2</sup>+y<sup>2</sup>+z<sup>2</sup>) &lt; R.&nbsp; Euclidean spheres can be used to restore a 3D shape from its medial surface (thinning the medial surface to a medial axis is a lossy process and is not reversible by sphere drawing). Euclidean spheres are also useful in constructing random porous media.
@@ -26,7 +26,7 @@ In a segmented image, this GDT calculates the shortest distance between seed pix
 **GDT of the 2D image with a point seed at far right of colored region.<br>
 The points labeled -1 are not connected.**
 <br>
-![Image GDT of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SegCellsGDT.png)
+![Image GDT of Segmented Pixels](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/DistanceMapImages/DistanceMapLib/SegCellsGDT.png)
 
 <h2><strong>Geodesic Path</strong>, 2D and 3D</h2>
 
@@ -35,7 +35,7 @@ This method finds the shortest distance between a selected point or points in a 
 **2D Shortest Path example.<br>
 Seed is BLUE Destination is GREEN**
 <br>
-![Image shortest path in GDT](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/ShortestPath.png)
+![Image shortest path in GDT](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/DistanceMapImages/DistanceMapLib/ShortestPath.png)
 
 ## HybridFloodFill, 3D only
 
@@ -51,6 +51,6 @@ Cutoff values &lt; 1 flood all connected resolved pores and unresolved pores up 
 The fluid is injected from the bottom.<br>
 The medium is rendered transparent to reveal the invading fluid.**
 <br>
-![Image Flooded Path At Breakthrough](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/Images/DistanceMapLib/SyntheticRockAtBreakthroughGray.png)
+![Image Flooded Path At Breakthrough](https://github.com/LazzyIzzi/LazzyIzzi.github.io/blob/main/DistanceMapImages/DistanceMapLib/SyntheticRockAtBreakthroughGray.png)
 
 * The hybrid floodfill code was originally written to test this hypothesis. Initial results were encouraging with behavior consistent within mineral types. Other uses have included the study of [mixed porosity carbonates](https://www.researchgate.net/publication/338394414_Nuclear_magnetic_resonance_and_x-ray_microtomography_pore-scale_analysis_of_oil_recovery_in_mixed-porosity_carbonates)
