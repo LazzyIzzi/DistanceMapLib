@@ -27,7 +27,8 @@ public class GDT3D extends Offsets{
 	//*********************************************************************************************
 	//PORE and SOLID tags are assigned values larger than an expected image dimension.
 	//TOLERANCE determines if colliding flood front distance values are sufficiently close to avoid re-flooding
-	final float	open = 99998,solid= 99999,tolerance =0.001f;
+	final float	open = 99998,solid= 99999,tolerance =0.001f; //original 
+//	final float	open = 99998,solid= 99999,tolerance =0.01f;
 	final String[] seedChoices3D = {"LeftSlice","RightSlice","TopSlice","BottomSlice","FrontSlice","BackSlice","Point(s)"};
 	final String[] seedChoices2D = {"LeftEdge","RightEdge","TopEdge","BottomEdge","Point(s)"};
 	final String[] mapChoices = {"Map 0","Map !0"};
@@ -480,7 +481,8 @@ public class GDT3D extends Offsets{
 				{
 					touchList.add(new PointDesc(i,j,k,offsetPt.val));
 				}
-				else if( pixVal < open && pixVal > seedPt.val + maxTolerance)
+				//else if( pixVal < open && pixVal > seedPt.val + maxTolerance)
+				else if( pixVal < open && pixVal >= seedPt.val + maxTolerance)
 				{
 					//Since the distance cannot increase faster than the diagonal distance, pixels with a greater increase
 					//are reassigned to the pore space to be re-flooded.
@@ -1020,7 +1022,8 @@ public class GDT3D extends Offsets{
 				{
 					touchList.add(new PointDesc(i,j,offsetPt.val));
 				}
-				else if( pixVal < open && pixVal > seedPt.val + whDiag *(1 + tolerance))
+				//else if( pixVal < open && pixVal > seedPt.val + whDiag *(1 + tolerance))
+				else if( pixVal < open && pixVal >= seedPt.val + whDiag *(1 + tolerance))
 				{
 					//Since the distance cannot increase faster than the diagonal distance, pixels with a greater increase
 					//are reassigned to the pore space to be re-flooded.

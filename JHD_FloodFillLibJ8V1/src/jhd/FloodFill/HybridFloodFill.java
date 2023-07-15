@@ -53,16 +53,20 @@ public class HybridFloodFill extends Offsets
 	/**A data structure returned by characterize and hybridFloodFill*/
 	public static class PorosityReport
 	{
+		/**The number of resolved Pore voxels in the image*/
+		public int resolvedPoreVoxelCount;
 		/**The number of resolved voxels in the image*/
-		public int resolvedVoxelCount;
-		/**The number of unresolved voxels in the image*/
+		public int resolvedSolidVoxelCount;
+		/**The number of unresolved Pore voxels in the image*/
 		public int unresolvedVoxelCount;
-		/**The number of floodable voxels in the image*/
+		/**The number of voxels containing porosity in the image*/
 		public int floodableVoxelCount;
-		/**The resolved volume in the image*/
-		public float resolvedVolume;		
-		/**The unresolved volume in the image*/
-		public float unresolvedVolume;		
+		/**The resolved solid volume in the image*/
+		public float resolvedSolidVolume;		
+		/**The resolved pore volume in the image*/
+		public float resolvedPoreVolume;		
+		/**The unresolved pore volume in the image*/
+		public float unresolvedPoreVolume;		
 		/**The resolved volume in the image*/
 		public float resolvedPorosity;		
 		/**The unresolved volume in the image*/
@@ -128,11 +132,13 @@ public class HybridFloodFill extends Offsets
 			return null;
 		}
 		
+		//In a porosity image solid=0, pore=1, and unresolved= 0<val<1
+		
 		PorosityReport phiRpt = new PorosityReport();
 
 
 		// find floodable voxels in front slice and initialize the flood list
-		int unresVoxCnt=0,resVoxCnt=0;
+		int unresVoxCnt=0,resPoreVoxCnt=0,resSolidVoxCnt=0;
 		float voxVal;
 		double unresVol=0;
 		float voxelVolume = (float)(pixWidth*pixHeight*pixDepth);
@@ -145,28 +151,28 @@ public class HybridFloodFill extends Offsets
 				for(int j=0;j<height;j++)
 				{
 					voxVal = slice[i+j*width];
-					if(voxVal <1.0)
+					if(voxVal == 0) resSolidVoxCnt++;
+					else if(voxVal>=1) resPoreVoxCnt++;
+					else if(voxVal <1.0 && voxVal>0)
 					{
 						unresVol += voxVal*voxelVolume;
 						unresVoxCnt++;
-					}
-					else
-					{
-						resVoxCnt++;
 					}
 				}
 			}
 		}
 
-		phiRpt.resolvedVoxelCount =resVoxCnt;
+		phiRpt.resolvedSolidVoxelCount =resSolidVoxCnt;
+		phiRpt.resolvedPoreVoxelCount =resPoreVoxCnt;
 		phiRpt.unresolvedVoxelCount =unresVoxCnt;
-		phiRpt.floodableVoxelCount = resVoxCnt + unresVoxCnt;
+		phiRpt.floodableVoxelCount = resPoreVoxCnt + unresVoxCnt;
 
-		phiRpt.resolvedVolume = resVoxCnt*voxelVolume;
-		phiRpt.unresolvedVolume = (float)unresVol;		
+		phiRpt.resolvedPoreVolume = resPoreVoxCnt*voxelVolume;
+		phiRpt.resolvedSolidVolume = resSolidVoxCnt*voxelVolume;
+		phiRpt.unresolvedPoreVolume = (float)unresVol;		
 
-		phiRpt.resolvedPorosity = phiRpt.resolvedVolume/imageVolume;
-		phiRpt.unresolvedPorosity = phiRpt.unresolvedVolume/imageVolume;
+		phiRpt.resolvedPorosity = phiRpt.resolvedPoreVolume/imageVolume;
+		phiRpt.unresolvedPorosity = phiRpt.unresolvedPoreVolume/imageVolume;
 		phiRpt.totalPorosity = phiRpt.resolvedPorosity + phiRpt.unresolvedPorosity;
 		return phiRpt;
 	}
@@ -199,6 +205,66 @@ public class HybridFloodFill extends Offsets
 			return -1;
 		}
 		
+		//Input porosity maps consist of three domains
+		//1. unresolved porosity 0<x<1
+		//2. resolved porosity x>=1
+		//3. solid x=0
+		
+		//Hybrid maps also consist of three domains
+		//1. unresolved porosity 0<x<1
+		//2. resolved porosity a Euclidean map of resolved porosity x>=1
+		//3. solid x=0
+		
+		//Create a temporary copy of the image data
+		Object[] oImgCopy = new Object[depth];
+		for(int k=0;k<depth;k++)
+		{
+			oImgCopy[k]= new float[width*height];
+			float[] imgSlice = (float[])oImageArr[k];
+			float[] copySlice = (float[])oImgCopy[k];
+			for(int i=0; i<width*height;i++)
+			{
+				copySlice[i] = imgSlice[i];
+				if(imgSlice[i] < 1) imgSlice[i]=0;
+			}
+		}		
+		
+		//Compute the edm non-zero domain of the modified original image
+		ExactEuclideanMap edm = new ExactEuclideanMap();
+		edm.edm3D(oImageArr, width, height, depth, (float)pixWidth, (float)pixHeight, (float)pixDepth, "Map !0", true);
+		
+		//Copy the unresolved porosity from the copy into the original image
+		double floodMax=Double.MIN_VALUE;
+		double floodMin=Double.MAX_VALUE;
+		for(int k=0;k<depth;k++)
+		{
+			float[] imgSlice = (float[])oImageArr[k];
+			float[] copySlice = (float[])oImgCopy[k];
+			for(int i=0; i<width*height;i++)
+			{
+				if(copySlice[i] < 1) imgSlice[i]=copySlice[i];
+				if(floodMax < imgSlice[i]) floodMax = imgSlice[i];
+				if(floodMin > imgSlice[i] && imgSlice[i]>0) floodMin = imgSlice[i];
+			}
+		}
+		
+		return floodMax;
+	}
+	
+	public double phiMapToHybridMapOld(Object[] oImageArr, int width, int height, int depth,
+			double 	pixWidth, double pixHeight, double pixDepth)
+	{
+		if(!(oImageArr[0] instanceof float[]))
+		{
+			infoBox("Object[] data must be such that (data[0] instanceof float[]) = true","HybridFloodFill.phiMapToHybridMap Bad Data");
+			return -1;
+		}
+		if(pixWidth<1 || pixHeight<1 || pixDepth<1)
+		{
+			infoBox("All voxel dimensions must be > 1 unit","HybridFloodFill.phiMapToHybridMap Bad Data");
+			return -1;
+		}
+		
 		//make a copy of the input data and set copy porosities >= 1 to 0
 		Object[] oEdmArr = new Object[depth];
 		for(int k=0;k<depth;k++)
@@ -218,6 +284,8 @@ public class HybridFloodFill extends Offsets
 		//Compute the edm of the copy;
 		ExactEuclideanMap edm = new ExactEuclideanMap();
 		edm.edm3D(oEdmArr, width, height, depth, (float)pixWidth, (float)pixHeight, (float)pixDepth, "Map 0", true);
+		
+		
 		//Combine the edm with the unresolved porosities
 		//Get the max edm distance
 		double floodMax=Double.MIN_VALUE;
@@ -310,6 +378,8 @@ public class HybridFloodFill extends Offsets
 		//		long floodNanoStart =System.nanoTime();
 
 		// rev 1-9-2016
+		// If the fllod min is less than 1 then we are flooding microporosity
+		// and there is no need to draw spheres since all of the accessible resolved pores have been flooded
 		if(floodMin <=1) drawSpheres = false;
 		else drawSpheres = true;
 
@@ -357,12 +427,12 @@ public class HybridFloodFill extends Offsets
 		// to vary the connectivity we simply go deeper into the list.		
 		PointDesc[] offsetList = Offsets.getIndexOffsets3D();
 
-		int		contactCycles=0,resVoxCnt=0,unresVoxCnt=0,cycleCnt=0;//,totVoxCnt=0;
+		int		contactCycles=0,resPoreCnt=0,unresPoreCnt=0,cycleCnt=0;//,totVoxCnt=0;
 		int		i,j,k,ii=0, jj=0, kk=0;;
 
 		// find and measure the floodable voxels in front slice,  and initialize the flood list
 		k=0;
-		double	unresVoxVol=0;
+		double	unresPoreVol=0;
 		float voxVal;
 		float[] slice = (float[])oImageArr[k];
 		for(i=0;i<width;i++)
@@ -373,14 +443,11 @@ public class HybridFloodFill extends Offsets
 				if( voxVal>= floodMin && voxVal<= floodMax)
 				{
 					floodList.add(new PointDesc(i,j,k,voxVal));
-					if(voxVal <1.0)
+					if(voxVal>=1)resPoreCnt++;
+					else if(voxVal <1.0 && voxVal >0 )
 					{
-						unresVoxVol += voxVal*voxelVolume;
-						unresVoxCnt++;
-					}
-					else
-					{
-						resVoxCnt++;
+						unresPoreVol += voxVal*voxelVolume;
+						unresPoreCnt++;
 					}
 					slice[i+j*width]=(float)floodVal;
 				}	
@@ -406,7 +473,7 @@ public class HybridFloodFill extends Offsets
 		// Begin the "burning" algorithm that advances the flood
 		while(floodList.isEmpty()==false)
 		{
-			prgBar.setValue(resVoxCnt + unresVoxCnt);
+			prgBar.setValue(resPoreCnt + unresPoreCnt);
 			touchList.clear();
 
 			for(PointDesc fl : floodList)
@@ -431,15 +498,11 @@ public class HybridFloodFill extends Offsets
 						else if( voxVal>= floodMin && voxVal<= floodMax)
 						{
 							touchList.add(new PointDesc(ii,jj,kk,voxVal));
-
-							if(voxVal <1.0)
+							if(voxVal>=1) resPoreCnt++;
+							else if(voxVal <1.0 && voxVal >0)
 							{
-								unresVoxVol += voxVal*voxelVolume;
-								unresVoxCnt++;
-							}
-							else
-							{
-								resVoxCnt++;  //used only for progress bar, get correct resVoxCnt after drawing spheres
+								unresPoreVol += voxVal*voxelVolume;
+								unresPoreCnt++;
 							}
 
 							floodedNeighbors+=1;
@@ -515,7 +578,7 @@ public class HybridFloodFill extends Offsets
 			for(PointDesc sl : sphereList)
 			{
 				prgBar.setValue(progress);
-				resVoxCnt += DrawSphere(oImageArr,width,height,depth,pixWidth,pixHeight,pixDepth,pixUnit,sl.x,sl.y,sl.z,sl.val,floodVal);
+				resPoreCnt += DrawSphere(oImageArr,width,height,depth,pixWidth,pixHeight,pixDepth,pixUnit,sl.x,sl.y,sl.z,sl.val,floodVal);
 				progress++;
 			}
 		}
@@ -532,7 +595,7 @@ public class HybridFloodFill extends Offsets
 		//		System.out.println("Total Time sec =" + (floodSec + sphereSec));
 
 		// get the total number of voxels flooded
-		int totVoxCnt=0;
+		int floodedVoxCnt=0;
 		for(k=0;k<depth;k++)
 		{
 			slice = (float[])oImageArr[k];
@@ -540,22 +603,19 @@ public class HybridFloodFill extends Offsets
 			{
 				for(j=0;j<height;j++)
 				{
-					if(slice[i+j*width] == floodVal) totVoxCnt++;
+					if(slice[i+j*width] == floodVal) floodedVoxCnt++;
 				}
 			}
 		}
 
-		//HybridFloodFill_V2 hff = new HybridFloodFill_V2();
-		//FloodReport fldRpt = hff.new FloodReport();
-		//changed FloodReport to static
 		fldRpt.afterFlood = new PorosityReport();
-		fldRpt.afterFlood.floodableVoxelCount=totVoxCnt;
-		fldRpt.afterFlood.resolvedVoxelCount = resVoxCnt;
-		fldRpt.afterFlood.unresolvedVoxelCount=unresVoxCnt;
-		fldRpt.afterFlood.resolvedVolume=resVoxCnt*voxelVolume;
-		fldRpt.afterFlood.unresolvedVolume=(float)unresVoxVol;//unresVoxCnt*voxelVolume;
-		fldRpt.afterFlood.resolvedPorosity=(float)resVoxCnt*voxelVolume/imageVolume;
-		fldRpt.afterFlood.unresolvedPorosity=(float)unresVoxVol/imageVolume;
+		fldRpt.afterFlood.floodableVoxelCount=floodedVoxCnt;
+		fldRpt.afterFlood.resolvedPoreVoxelCount = resPoreCnt;
+		fldRpt.afterFlood.unresolvedVoxelCount=unresPoreCnt;
+		fldRpt.afterFlood.resolvedPoreVolume=resPoreCnt*voxelVolume;
+		fldRpt.afterFlood.unresolvedPoreVolume=(float)unresPoreVol;//unresVoxCnt*voxelVolume;
+		fldRpt.afterFlood.resolvedPorosity=(float)resPoreCnt*voxelVolume/imageVolume;
+		fldRpt.afterFlood.unresolvedPorosity=(float)unresPoreVol/imageVolume;
 		fldRpt.afterFlood.totalPorosity=fldRpt.afterFlood.resolvedPorosity+fldRpt.afterFlood.unresolvedPorosity;
 
 		fldRpt.floodStatistics = new FloodStats();		
@@ -609,7 +669,6 @@ public class HybridFloodFill extends Offsets
 			fldRpt.floodStatistics.meanTort = -1;
 			fldRpt.floodStatistics.stdDevTort = -1;			
 		}
-
 
 		frame.dispose();
 		return fldRpt;

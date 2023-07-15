@@ -42,7 +42,7 @@ public class EuclideanSpheres
 		public double pixWidth,pixHeight,pixDepth;
 		/**Pixel location in pixel units*/
 		public int centerX,centerY,centerZ;
-		/**Sphere rasius in user units*/
+		/**Sphere radius in user units*/
 		public double radius;
 		/**Fill the spheres with this value*/
 		public double fillVal;
