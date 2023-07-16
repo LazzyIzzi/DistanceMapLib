@@ -12,8 +12,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
-//import jhd.FloodFill.Offsets.PointDesc;
-
 
 /**Methods for 2D and 3D Geodesic transform and tortousity
  * @author John H Dunsmuir

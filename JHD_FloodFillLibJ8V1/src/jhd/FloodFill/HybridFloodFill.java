@@ -2,22 +2,6 @@ package jhd.FloodFill;
 //Copyright (c) John H Dunsmuir 2022
 //MIT-License
 
-
-/* This method does a lot of pre &amp; post processing and characterizations&dot; And presents its findings in a report.
- * Input image is a porosity map, resolved porosity voxels have a value of 1, unresolved porosity voxels have values  0&lt;phi&lt;1
- * 
- * Added initial characterizations
- * Built in the EDM of resolved pore space
- * 
- * Removed tortuosity calculation because it is unreliable when using anisotropic voxels.
- * 
- * ToDo
- * Add GDT to replace the tortuosity calculation
- * Set output to GDT image
- * get mean and stdDev of tort in back slice
- * 
- */
-
 import java.util.ArrayList;
 import java.util.List;
 
